@@ -84,6 +84,9 @@ const PIE_COLORS = [
   "#f97316",
 ];
 
+const STATUS_GANHO = 142;
+const STATUS_PERDIDO = 143;
+
 export default function RelatoriosPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -200,18 +203,22 @@ export default function RelatoriosPage() {
   const metricas = useMemo(() => {
     const totalLeads = relatorioFiltrado.length;
 
-    const valorTotal = relatorioFiltrado
-      .filter((item) => Number(item.status_id) === 142)
-      .reduce((acc, item) => acc + Number(item.valor || 0), 0);
-
     const ganhos = relatorioFiltrado.filter(
-      (item) =>
-        item.etapa?.toLowerCase() === "venda" ||
-        item.etapa?.toLowerCase() === "ganho"
+      (item) => Number(item.status_id) === STATUS_GANHO
     );
 
     const perdidos = relatorioFiltrado.filter(
-      (item) => item.etapa?.toLowerCase() === "perdido"
+      (item) => Number(item.status_id) === STATUS_PERDIDO
+    );
+
+    const emAndamento = relatorioFiltrado.filter((item) => {
+      const statusId = Number(item.status_id);
+      return statusId !== STATUS_GANHO && statusId !== STATUS_PERDIDO;
+    });
+
+    const valorTotal = ganhos.reduce(
+      (acc, item) => acc + Number(item.valor || 0),
+      0
     );
 
     const porOrigem = relatorioFiltrado.reduce<Record<string, number>>(
@@ -237,6 +244,7 @@ export default function RelatoriosPage() {
       valorTotal,
       ganhos: ganhos.length,
       perdidos: perdidos.length,
+      emAndamento: emAndamento.length,
       porOrigem,
       porConsultor,
     };
@@ -551,7 +559,7 @@ export default function RelatoriosPage() {
                     {loading ? "..." : metricas.ganhos}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Leads vencidos no período
+                    Leads com status de ganho
                   </p>
                 </CardContent>
               </Card>
@@ -573,7 +581,7 @@ export default function RelatoriosPage() {
                     {loading ? "..." : metricas.perdidos}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Leads marcados como perdidos
+                    Leads com status de perdido
                   </p>
                 </CardContent>
               </Card>
@@ -630,7 +638,7 @@ export default function RelatoriosPage() {
               <Card className="rounded-3xl shadow-sm">
                 <CardHeader>
                   <CardTitle>Distribuição rápida</CardTitle>
-                  <CardDescription>Ganhos x perdidos</CardDescription>
+                  <CardDescription>Ganhos x perdidos x em andamento</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-5">
@@ -671,6 +679,28 @@ export default function RelatoriosPage() {
                           width: `${
                             metricas.totalLeads
                               ? (metricas.perdidos / metricas.totalLeads) * 100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-amber-500" />
+                        Em andamento
+                      </span>
+                      <span className="font-medium">{metricas.emAndamento}</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-muted">
+                      <div
+                        className="h-3 rounded-full bg-amber-500"
+                        style={{
+                          width: `${
+                            metricas.totalLeads
+                              ? (metricas.emAndamento / metricas.totalLeads) * 100
                               : 0
                           }%`,
                         }}

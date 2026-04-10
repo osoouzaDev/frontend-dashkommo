@@ -14,7 +14,6 @@ import {
   Menu,
   Search,
   Settings,
-  Shield,
   Sparkles,
   Target,
   TrendingDown,
@@ -50,6 +49,9 @@ const menuItems = [
 ];
 
 type FiltroEtapa = "todos" | "ganhos" | "perdidos" | "andamento";
+
+const STATUS_GANHO = 142;
+const STATUS_PERDIDO = 143;
 
 export default function LeadsPage() {
   const router = useRouter();
@@ -108,12 +110,16 @@ export default function LeadsPage() {
   }, [usuario]);
 
   function ehGanho(lead: RelatorioItem) {
-    const etapa = lead.etapa?.toLowerCase();
-    return etapa === "venda" || etapa === "ganho" || Number(lead.status_id) === 142;
+    return Number(lead.status_id) === STATUS_GANHO;
   }
 
   function ehPerdido(lead: RelatorioItem) {
-    return lead.etapa?.toLowerCase() === "perdido";
+    return Number(lead.status_id) === STATUS_PERDIDO;
+  }
+
+  function ehAndamento(lead: RelatorioItem) {
+    const statusId = Number(lead.status_id);
+    return statusId !== STATUS_GANHO && statusId !== STATUS_PERDIDO;
   }
 
   const leadsFiltrados = useMemo(() => {
@@ -125,7 +131,8 @@ export default function LeadsPage() {
         lead.lead_nome?.toLowerCase().includes(termo) ||
         lead.consultor_nome?.toLowerCase().includes(termo) ||
         lead.origem?.toLowerCase().includes(termo) ||
-        lead.etapa?.toLowerCase().includes(termo);
+        lead.etapa?.toLowerCase().includes(termo) ||
+        String(lead.status_id ?? "").includes(termo);
 
       const bateEtapa =
         filtroEtapa === "todos"
@@ -134,7 +141,7 @@ export default function LeadsPage() {
           ? ehGanho(lead)
           : filtroEtapa === "perdidos"
           ? ehPerdido(lead)
-          : !ehGanho(lead) && !ehPerdido(lead);
+          : ehAndamento(lead);
 
       return Boolean(bateTexto && bateEtapa);
     });
@@ -144,7 +151,8 @@ export default function LeadsPage() {
     const total = leads.length;
     const ganhos = leads.filter(ehGanho).length;
     const perdidos = leads.filter(ehPerdido).length;
-    const andamento = total - ganhos - perdidos;
+    const andamento = leads.filter(ehAndamento).length;
+
     const valorGanho = leads
       .filter(ehGanho)
       .reduce((acc, item) => acc + Number(item.valor || 0), 0);
@@ -178,14 +186,12 @@ export default function LeadsPage() {
     }).format(valor);
   }
 
-  function badgeEtapa(etapa?: string) {
-    const etapaNormalizada = etapa?.toLowerCase();
-
-    if (etapaNormalizada === "venda" || etapaNormalizada === "ganho") {
+  function badgeEtapa(lead: RelatorioItem) {
+    if (ehGanho(lead)) {
       return "default";
     }
 
-    if (etapaNormalizada === "perdido") {
+    if (ehPerdido(lead)) {
       return "destructive";
     }
 
@@ -418,7 +424,7 @@ export default function LeadsPage() {
                     {loading ? "..." : metricas.ganhos}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Leads marcados como venda/ganho
+                    Leads com status de ganho
                   </p>
                 </CardContent>
               </Card>
@@ -440,7 +446,7 @@ export default function LeadsPage() {
                     {loading ? "..." : metricas.perdidos}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Leads finalizados como perdido
+                    Leads com status de perdido
                   </p>
                 </CardContent>
               </Card>
@@ -462,7 +468,7 @@ export default function LeadsPage() {
                     {loading ? "..." : formatarMoeda(metricas.valorGanho)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Soma financeira dos leads ganhos
+                    Soma financeira apenas dos ganhos
                   </p>
                 </CardContent>
               </Card>
@@ -666,7 +672,7 @@ export default function LeadsPage() {
                                 {lead.lead_nome}
                               </p>
                               <Badge
-                                variant={badgeEtapa(lead.etapa) as any}
+                                variant={badgeEtapa(lead) as any}
                                 className="rounded-full"
                               >
                                 {lead.etapa || "Sem etapa"}
