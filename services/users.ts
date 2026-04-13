@@ -14,6 +14,7 @@ export interface Usuario {
 export interface UsuarioLogin {
   id: number;
   nome: string;
+  email?: string;
   acesso: TipoAcesso;
 }
 

@@ -3,17 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useCompactMode } from "@/components/compact-mode-provider";
 import {
   BarChart3,
   Bell,
+  Calendar,
   CheckCircle2,
+  Download,
   Eye,
   EyeOff,
+  FileDown,
   FileText,
   Globe,
   Home,
   Lock,
   LogOut,
+  Mail,
   Menu,
   MonitorCog,
   MoonStar,
@@ -45,6 +50,7 @@ import { Separator } from "@/components/ui/separator";
 type UsuarioLogin = {
   id: number;
   nome: string;
+  email: string;
   acesso: "administrador" | "usuario";
 };
 
@@ -72,9 +78,7 @@ export default function ConfiguracoesPage() {
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
-  const [notificacoesEmail, setNotificacoesEmail] = useState(true);
-  const [modoCompacto, setModoCompacto] = useState(false);
-  const [resumoAutomatico, setResumoAutomatico] = useState(true);
+  const { isCompact, setIsCompact } = useCompactMode();
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -598,27 +602,11 @@ export default function ConfiguracoesPage() {
 
                   <CardContent className="grid gap-4">
                     <ToggleCard
-                      icon={Bell}
-                      title="Notificações por email"
-                      description="Receba alertas e atualizações importantes por email."
-                      checked={notificacoesEmail}
-                      onChange={setNotificacoesEmail}
-                    />
-
-                    <ToggleCard
                       icon={MonitorCog}
                       title="Modo compacto"
                       description="Reduza espaçamentos para uma visualização mais densa."
-                      checked={modoCompacto}
-                      onChange={setModoCompacto}
-                    />
-
-                    <ToggleCard
-                      icon={Zap}
-                      title="Resumo automático"
-                      description="Exiba resumos rápidos e destaques logo ao abrir o painel."
-                      checked={resumoAutomatico}
-                      onChange={setResumoAutomatico}
+                      checked={isCompact}
+                      onChange={setIsCompact}
                     />
                   </CardContent>
                 </Card>
