@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   BarChart3,
   Bell,
@@ -74,7 +75,7 @@ export default function ConfiguracoesPage() {
   const [notificacoesEmail, setNotificacoesEmail] = useState(true);
   const [modoCompacto, setModoCompacto] = useState(false);
   const [resumoAutomatico, setResumoAutomatico] = useState(true);
-  const [temaSelecionado, setTemaSelecionado] = useState<"system" | "light" | "dark">("system");
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -210,7 +211,7 @@ export default function ConfiguracoesPage() {
           }`}
         >
           <div
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
+            className={`absolute top-1 h-5 w-5 rounded-full bg-background shadow transition ${
               checked ? "left-6" : "left-1"
             }`}
           />
@@ -635,9 +636,9 @@ export default function ConfiguracoesPage() {
                   <CardContent className="grid gap-3">
                     <button
                       type="button"
-                      onClick={() => setTemaSelecionado("system")}
+                      onClick={() => setTheme("system")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
-                        temaSelecionado === "system"
+                        theme === "system"
                           ? "border-primary bg-primary/5"
                           : "hover:bg-muted/40"
                       }`}
@@ -651,16 +652,16 @@ export default function ConfiguracoesPage() {
                           </p>
                         </div>
                       </div>
-                      {temaSelecionado === "system" ? (
+                      {theme === "system" ? (
                         <CheckCircle2 className="h-4 w-4 text-primary" />
                       ) : null}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setTemaSelecionado("light")}
+                      onClick={() => setTheme("light")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
-                        temaSelecionado === "light"
+                        theme === "light"
                           ? "border-primary bg-primary/5"
                           : "hover:bg-muted/40"
                       }`}
@@ -674,16 +675,16 @@ export default function ConfiguracoesPage() {
                           </p>
                         </div>
                       </div>
-                      {temaSelecionado === "light" ? (
+                      {theme === "light" ? (
                         <CheckCircle2 className="h-4 w-4 text-primary" />
                       ) : null}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setTemaSelecionado("dark")}
+                      onClick={() => setTheme("dark")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
-                        temaSelecionado === "dark"
+                        theme === "dark"
                           ? "border-primary bg-primary/5"
                           : "hover:bg-muted/40"
                       }`}
@@ -697,7 +698,7 @@ export default function ConfiguracoesPage() {
                           </p>
                         </div>
                       </div>
-                      {temaSelecionado === "dark" ? (
+                      {theme === "dark" ? (
                         <CheckCircle2 className="h-4 w-4 text-primary" />
                       ) : null}
                     </button>
@@ -739,8 +740,8 @@ export default function ConfiguracoesPage() {
                     <div className="rounded-2xl border p-4">
                       <div className="mb-1 flex items-center justify-between">
                         <p className="font-medium">Personalização</p>
-                        <span className="text-sm text-muted-foreground">
-                          Tema {temaSelecionado}
+                        <span className="text-sm text-muted-foreground capitalize">
+                          Tema {theme}
                         </span>
                       </div>
                       <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">

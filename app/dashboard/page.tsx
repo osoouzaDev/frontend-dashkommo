@@ -47,6 +47,12 @@ type MenuItem = {
   href: string;
 };
 
+type KanbanColumn = {
+  etapa: string;
+  leads: RelatorioItem[];
+  total: number;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,6 +63,9 @@ export default function DashboardPage() {
   const [relatorio, setRelatorio] = useState<RelatorioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
+  const [colunasAbertas, setColunasAbertas] = useState<Record<string, boolean>>(
+    {}
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -136,14 +145,63 @@ export default function DashboardPage() {
     };
   }, [relatorio, usuarios]);
 
-  const leadsRecentes = useMemo(() => {
-    return [...relatorio]
-      .sort((a, b) => {
-        const dataA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0;
-        const dataB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0;
-        return dataB - dataA;
+  const kanbanEtapas = useMemo(() => {
+    const ordemEtapas = [
+      "Lead novo",
+      "Tenho que descobrir",
+      "Qualificado - Em conversa",
+      "Conversa",
+      "Fazer Ligação",
+      "Reunião",
+      "Negociação",
+      "Envio de Proposta",
+      "Proposta",
+      "Fechamento",
+      "Movido para Cadência",
+      "Funil Nutrição a Longo Prazo",
+      "Gerar Forms",
+      "Venda",
+      "Ganho",
+      "Perdido",
+    ];
+
+    const mapa = new Map<string, RelatorioItem[]>();
+
+    for (const item of relatorio) {
+      const etapa = item.etapa?.trim() || "Sem etapa";
+
+      if (!mapa.has(etapa)) {
+        mapa.set(etapa, []);
+      }
+
+      mapa.get(etapa)!.push(item);
+    }
+
+    const colunas: KanbanColumn[] = Array.from(mapa.entries()).map(
+      ([etapa, leads]) => ({
+        etapa,
+        leads: [...leads].sort((a, b) => {
+          const dataA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0;
+          const dataB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0;
+          return dataB - dataA;
+        }),
+        total: leads.reduce((acc, item) => acc + Number(item.valor || 0), 0),
       })
-      .slice(0, 6);
+    );
+
+    return colunas.sort((a, b) => {
+      const indexA = ordemEtapas.indexOf(a.etapa);
+      const indexB = ordemEtapas.indexOf(b.etapa);
+
+      if (indexA === -1 && indexB === -1) {
+        return b.leads.length - a.leads.length;
+      }
+
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+
+      return indexA - indexB;
+    });
   }, [relatorio]);
 
   const menuAdmin: MenuItem[] = [
@@ -620,9 +678,9 @@ export default function DashboardPage() {
                   <Card className="rounded-3xl shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
-                        <CardTitle>Leads recentes</CardTitle>
+                        <CardTitle>Kanban do funil</CardTitle>
                         <CardDescription>
-                          Últimos registros recebidos do backend
+                          Leads agrupados por etapa
                         </CardDescription>
                       </div>
 
@@ -637,56 +695,139 @@ export default function DashboardPage() {
                       </Button>
                     </CardHeader>
 
-                    <CardContent className="space-y-3">
+                    <CardContent>
                       {loading ? (
-                        Array.from({ length: 4 }).map((_, index) => (
-                          <div
-                            key={index}
-                            className="rounded-2xl border p-4 shadow-sm"
-                          >
-                            <div className="mb-3 h-4 w-40 animate-pulse rounded bg-muted" />
-                            <div className="mb-2 h-3 w-28 animate-pulse rounded bg-muted" />
-                            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-                          </div>
-                        ))
-                      ) : leadsRecentes.length === 0 ? (
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                          {Array.from({ length: 4 }).map((_, index) => (
+                            <div
+                              key={index}
+                              className="min-w-[300px] rounded-2xl border p-4"
+                            >
+                              <div className="mb-4 h-5 w-40 animate-pulse rounded bg-muted" />
+                              <div className="mb-3 h-4 w-24 animate-pulse rounded bg-muted" />
+                              <div className="space-y-3">
+                                <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+                                <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+                                <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : kanbanEtapas.length === 0 ? (
                         <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
                           Nenhum lead encontrado.
                         </div>
                       ) : (
-                        leadsRecentes.map((lead) => (
-                          <div
-                            key={lead.lead_id}
-                            className="group rounded-2xl border p-4 shadow-sm transition hover:border-primary/30 hover:bg-muted/30"
-                          >
-                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                              <div className="space-y-1">
-                                <p className="font-semibold tracking-tight">
-                                  {lead.lead_nome}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  Consultor:{" "}
-                                  {lead.consultor_nome || "Não definido"}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  Origem: {lead.origem || "Não informado"}
-                                </p>
-                              </div>
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                          {kanbanEtapas.map((coluna) => {
+                            const expandida = Boolean(
+                              colunasAbertas[coluna.etapa]
+                            );
+                            const limiteInicial = 4;
+                            const leadsVisiveis = expandida
+                              ? coluna.leads
+                              : coluna.leads.slice(0, limiteInicial);
+                            const quantidadeOculta = Math.max(
+                              0,
+                              coluna.leads.length - limiteInicial
+                            );
 
-                              <div className="flex flex-col items-start gap-2 md:items-end">
-                                <Badge
-                                  variant={badgeEtapa(lead.etapa) as any}
-                                  className="rounded-full"
-                                >
-                                  {lead.etapa || "Sem etapa"}
-                                </Badge>
-                                <p className="text-sm font-semibold">
-                                  {formatarMoeda(Number(lead.valor || 0))}
-                                </p>
+                            return (
+                              <div
+                                key={coluna.etapa}
+                                className="min-w-[320px] max-w-[320px] rounded-3xl border bg-muted/20 p-4"
+                              >
+                                <div className="mb-4 border-b pb-4">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      <h3 className="text-sm font-bold uppercase tracking-wide">
+                                        {coluna.etapa}
+                                      </h3>
+                                      <p className="mt-1 text-xs text-muted-foreground">
+                                        {coluna.leads.length} lead
+                                        {coluna.leads.length !== 1 ? "s" : ""}
+                                      </p>
+                                    </div>
+
+                                    <Badge
+                                      variant={badgeEtapa(coluna.etapa) as any}
+                                      className="rounded-full"
+                                    >
+                                      {coluna.leads.length}
+                                    </Badge>
+                                  </div>
+
+                                  <p className="mt-3 text-sm font-semibold">
+                                    {formatarMoeda(coluna.total)}
+                                  </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                  {leadsVisiveis.map((lead) => (
+                                    <div
+                                      key={lead.lead_id}
+                                      className="rounded-2xl border bg-background p-4 shadow-sm transition hover:border-primary/30"
+                                    >
+                                      <div className="mb-2 flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                          <p className="truncate font-semibold">
+                                            {lead.lead_nome}
+                                          </p>
+                                          <p className="mt-1 text-xs text-muted-foreground">
+                                            {lead.consultor_nome ||
+                                              "Não definido"}
+                                          </p>
+                                        </div>
+
+                                        <span className="shrink-0 text-xs text-muted-foreground">
+                                          {lead.data_criacao
+                                            ? new Date(
+                                                lead.data_criacao
+                                              ).toLocaleDateString("pt-BR")
+                                            : "--"}
+                                        </span>
+                                      </div>
+
+                                      <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground">
+                                          Origem:{" "}
+                                          {lead.origem || "Não informado"}
+                                        </p>
+                                        <p className="text-sm font-medium">
+                                          {formatarMoeda(
+                                            Number(lead.valor || 0)
+                                          )}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {coluna.leads.length > limiteInicial && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="mt-3 w-full rounded-2xl"
+                                    onClick={() =>
+                                      setColunasAbertas((prev) => ({
+                                        ...prev,
+                                        [coluna.etapa]: !prev[coluna.etapa],
+                                      }))
+                                    }
+                                  >
+                                    {expandida
+                                      ? "Ver menos"
+                                      : `Ver mais${
+                                          quantidadeOculta > 0
+                                            ? ` (${quantidadeOculta})`
+                                            : ""
+                                        }`}
+                                  </Button>
+                                )}
                               </div>
-                            </div>
-                          </div>
-                        ))
+                            );
+                          })}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
