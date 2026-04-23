@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import confetti from "canvas-confetti";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +67,7 @@ export default function DashboardPage() {
   const [colunasAbertas, setColunasAbertas] = useState<Record<string, boolean>>(
     {}
   );
+  const [prevGanhos, setPrevGanhos] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -111,7 +113,36 @@ export default function DashboardPage() {
     }
 
     carregarDados();
+
+    const intervalId = setInterval(carregarDados, 30000); // Poll a cada 30 segundos
+    return () => clearInterval(intervalId);
   }, [usuario]);
+
+  useEffect(() => {
+    if (!relatorio.length) return;
+
+    const ganhosAtuais = relatorio.filter(
+      (item) =>
+        item.etapa?.toLowerCase() === "venda" ||
+        item.etapa?.toLowerCase() === "ganho"
+    ).length;
+
+    if (prevGanhos !== null && ganhosAtuais > prevGanhos) {
+      // Nova venda detectada!
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#FFD700", "#FFA500", "#00FF00", "#FFFFFF"], // Cores festivas
+      });
+
+      // Som opcional (pode ser adicionado se desejar)
+      // const audio = new Audio('/sounds/victory.mp3');
+      // audio.play();
+    }
+
+    setPrevGanhos(ganhosAtuais);
+  }, [relatorio, prevGanhos]);
 
   const metricas = useMemo(() => {
     const totalLeads = relatorio.length;
@@ -213,10 +244,9 @@ export default function DashboardPage() {
   ];
 
   const menuUsuario: MenuItem[] = [
-    { icon: Home, label: "Início", href: "/dashboard" },
-    { icon: User, label: "Meu Painel", href: "/dashboard" },
-    { icon: Settings, label: "Configurações", href: "/configuracoes" },
-  ];
+  { icon: Home, label: "Início", href: "/dashboard" },
+  { icon: Settings, label: "Configurações", href: "/configuracoes" },
+];
 
   const menuItems =
     usuario?.acesso === "administrador" ? menuAdmin : menuUsuario;

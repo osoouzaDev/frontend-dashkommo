@@ -6,19 +6,14 @@ import { useTheme } from "next-themes";
 import { useCompactMode } from "@/components/compact-mode-provider";
 import {
   BarChart3,
-  Bell,
-  Calendar,
   CheckCircle2,
-  Download,
   Eye,
   EyeOff,
-  FileDown,
   FileText,
   Globe,
   Home,
   Lock,
   LogOut,
-  Mail,
   Menu,
   MonitorCog,
   MoonStar,
@@ -29,7 +24,6 @@ import {
   SunMedium,
   User2,
   Users,
-  Zap,
   ChevronRight,
 } from "lucide-react";
 
@@ -54,13 +48,11 @@ type UsuarioLogin = {
   acesso: "administrador" | "usuario";
 };
 
-const menuItems = [
-  { icon: Home, label: "Início", href: "/dashboard" },
-  { icon: Users, label: "Usuários", href: "/usuarios" },
-  { icon: FileText, label: "Leads", href: "/leads" },
-  { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
-  { icon: Settings, label: "Configurações", href: "/configuracoes" },
-];
+type MenuItem = {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+};
 
 export default function ConfiguracoesPage() {
   const router = useRouter();
@@ -179,6 +171,22 @@ export default function ConfiguracoesPage() {
     };
   }, [novaSenha]);
 
+  const menuAdmin: MenuItem[] = [
+    { icon: Home, label: "Início", href: "/dashboard" },
+    { icon: Users, label: "Usuários", href: "/usuarios" },
+    { icon: FileText, label: "Leads", href: "/leads" },
+    { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
+    { icon: Settings, label: "Configurações", href: "/configuracoes" },
+  ];
+
+  const menuUsuario: MenuItem[] = [
+    { icon: Home, label: "Início", href: "/dashboard" },
+    { icon: Settings, label: "Configurações", href: "/configuracoes" },
+  ];
+
+  const menuItems =
+    usuario?.acesso === "administrador" ? menuAdmin : menuUsuario;
+
   function ToggleCard({
     icon: Icon,
     title,
@@ -249,7 +257,9 @@ export default function ConfiguracoesPage() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold tracking-tight">DashKommo</h1>
-                  <p className="text-xs text-muted-foreground">Central de ajustes</p>
+                  <p className="text-xs text-muted-foreground">
+                    Central de ajustes
+                  </p>
                 </div>
               </div>
 
@@ -273,7 +283,9 @@ export default function ConfiguracoesPage() {
                   </Avatar>
 
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{usuario.nome}</p>
+                    <p className="truncate text-sm font-semibold">
+                      {usuario.nome}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       Perfil: {usuario.acesso}
                     </p>
@@ -371,7 +383,9 @@ export default function ConfiguracoesPage() {
                     <div className="flex flex-wrap gap-3">
                       <Badge
                         variant={
-                          usuario.acesso === "administrador" ? "default" : "secondary"
+                          usuario.acesso === "administrador"
+                            ? "default"
+                            : "secondary"
                         }
                         className="rounded-full px-4 py-2"
                       >
@@ -440,7 +454,9 @@ export default function ConfiguracoesPage() {
                       <div className="rounded-3xl border bg-background p-5 shadow-sm">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-14 w-14">
-                            <AvatarFallback>{getInitials(nome || usuario.nome)}</AvatarFallback>
+                            <AvatarFallback>
+                              {getInitials(nome || usuario.nome)}
+                            </AvatarFallback>
                           </Avatar>
 
                           <div>
@@ -456,7 +472,9 @@ export default function ConfiguracoesPage() {
                         <div className="space-y-2 text-sm text-muted-foreground">
                           <div className="flex items-center justify-between">
                             <span>Status da conta</span>
-                            <span className="font-medium text-foreground">Ativa</span>
+                            <span className="font-medium text-foreground">
+                              Ativa
+                            </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span>Nível de acesso</span>
@@ -764,22 +782,24 @@ export default function ConfiguracoesPage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => router.push("/relatorios")}
-                      className="flex items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/40"
-                    >
-                      <div className="flex items-center gap-3">
-                        <BarChart3 className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">Abrir relatórios</p>
-                          <p className="text-sm text-muted-foreground">
-                            Acompanhe métricas e resultados.
-                          </p>
+                    {usuario.acesso === "administrador" && (
+                      <button
+                        type="button"
+                        onClick={() => router.push("/relatorios")}
+                        className="flex items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/40"
+                      >
+                        <div className="flex items-center gap-3">
+                          <BarChart3 className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Abrir relatórios</p>
+                            <p className="text-sm text-muted-foreground">
+                              Acompanhe métricas e resultados.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
