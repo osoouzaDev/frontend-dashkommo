@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentProps, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -12,7 +12,6 @@ import {
   Shield,
   TrendingDown,
   TrendingUp,
-  User,
   Users,
   Wallet,
   Sparkles,
@@ -21,6 +20,9 @@ import {
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import confetti from "canvas-confetti";
+import { getAccessToken, getStoredUser } from "@/services/authSession";
+import { performLogout } from "@/services/logout";
+import { getErrorMessage } from "@/lib/error-message";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,22 +72,15 @@ export default function DashboardPage() {
   const [prevGanhos, setPrevGanhos] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuarioStorage = localStorage.getItem("usuario");
+    const token = getAccessToken();
+    const usuarioStorage = getStoredUser();
 
     if (!token || !usuarioStorage) {
       router.push("/login");
       return;
     }
 
-    try {
-      const usuarioParse: UsuarioLogin = JSON.parse(usuarioStorage);
-      setUsuario(usuarioParse);
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-      router.push("/login");
-    }
+    setUsuario(usuarioStorage);
   }, [router]);
 
   useEffect(() => {
@@ -105,8 +100,8 @@ export default function DashboardPage() {
           setUsuarios(usuariosData);
           setRelatorio(relatorioData);
         }
-      } catch (error: any) {
-        setErro(error.message || "Erro ao carregar dashboard");
+      } catch (error: unknown) {
+        setErro(getErrorMessage(error, "Erro ao carregar dashboard"));
       } finally {
         setLoading(false);
       }
@@ -251,9 +246,8 @@ export default function DashboardPage() {
   const menuItems =
     usuario?.acesso === "administrador" ? menuAdmin : menuUsuario;
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+  async function handleLogout() {
+    await performLogout();
     router.push("/login");
   }
 
@@ -274,7 +268,7 @@ export default function DashboardPage() {
       .join("");
   }
 
-  function badgeEtapa(etapa?: string) {
+  function badgeEtapa(etapa?: string): ComponentProps<typeof Badge>["variant"] {
     const etapaNormalizada = etapa?.toLowerCase();
 
     if (etapaNormalizada === "venda" || etapaNormalizada === "ganho") {
@@ -779,10 +773,7 @@ export default function DashboardPage() {
                                       </p>
                                     </div>
 
-                                    <Badge
-                                      variant={badgeEtapa(coluna.etapa) as any}
-                                      className="rounded-full"
-                                    >
+                                    <Badge variant={badgeEtapa(coluna.etapa)} className="rounded-full">
                                       {coluna.leads.length}
                                     </Badge>
                                   </div>

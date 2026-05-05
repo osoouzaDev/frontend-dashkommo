@@ -20,6 +20,7 @@ export interface UsuarioLogin {
 
 export interface LoginResponse {
   token: string;
+  refreshToken?: string;
   usuario: UsuarioLogin;
 }
 
@@ -101,4 +102,17 @@ export async function excluirUsuario(id: string | number) {
 
 export async function buscarRelatorio(): Promise<RelatorioItem[]> {
   return await authFetch("/relatorio");
+}
+
+export async function logout(refreshToken?: string) {
+  return await authFetch("/logout", {
+    method: "POST",
+    body: JSON.stringify(
+      refreshToken
+        ? {
+            refreshToken,
+          }
+        : {}
+    ),
+  });
 }

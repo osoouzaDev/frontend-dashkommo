@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentProps, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   BarChart3,
@@ -26,6 +26,9 @@ import {
   type RelatorioItem,
   type UsuarioLogin,
 } from "@/services/users";
+import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import { performLogout } from "@/services/logout";
+import { getErrorMessage } from "@/lib/error-message";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,28 +69,26 @@ export default function LeadsPage() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuarioStorage = localStorage.getItem("usuario");
+    const token = getAccessToken();
+    const usuarioStorage = getStoredUser();
 
     if (!token || !usuarioStorage) {
       router.push("/login");
       return;
     }
 
-    try {
-      const usuarioParse: UsuarioLogin = JSON.parse(usuarioStorage);
-
-      if (usuarioParse.acesso !== "administrador") {
-        router.push("/dashboard");
-        return;
-      }
-
-      setUsuario(usuarioParse);
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-      router.push("/login");
+    if (usuarioStorage.acesso !== "administrador") {
+      router.push("/dashboard");
+      return;
     }
+
+    if (!usuarioStorage.id) {
+      clearSession();
+      router.push("/login");
+      return;
+    }
+
+    setUsuario(usuarioStorage);
   }, [router]);
 
   useEffect(() => {
@@ -99,8 +100,8 @@ export default function LeadsPage() {
         setErro("");
         const data = await buscarRelatorio();
         setLeads(data);
-      } catch (error: any) {
-        setErro(error.message || "Erro ao carregar leads");
+      } catch (error: unknown) {
+        setErro(getErrorMessage(error, "Erro ao carregar leads"));
       } finally {
         setLoading(false);
       }
@@ -186,7 +187,7 @@ export default function LeadsPage() {
     }).format(valor);
   }
 
-  function badgeEtapa(lead: RelatorioItem) {
+  function badgeEtapa(lead: RelatorioItem): ComponentProps<typeof Badge>["variant"] {
     if (ehGanho(lead)) {
       return "default";
     }
@@ -198,9 +199,8 @@ export default function LeadsPage() {
     return "secondary";
   }
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+  async function handleLogout() {
+    await performLogout();
     router.push("/login");
   }
 
@@ -671,10 +671,7 @@ export default function LeadsPage() {
                               <p className="font-semibold tracking-tight">
                                 {lead.lead_nome}
                               </p>
-                              <Badge
-                                variant={badgeEtapa(lead) as any}
-                                className="rounded-full"
-                              >
+                              <Badge variant={badgeEtapa(lead)} className="rounded-full">
                                 {lead.etapa || "Sem etapa"}
                               </Badge>
                             </div>

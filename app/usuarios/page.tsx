@@ -31,6 +31,9 @@ import {
   type UpdateUserPayload,
   type UsuarioLogin,
 } from "@/services/users";
+import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import { performLogout } from "@/services/logout";
+import { getErrorMessage } from "@/lib/error-message";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +47,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 const initialForm = {
   nome: "",
@@ -79,28 +81,26 @@ export default function UsuariosPage() {
   const [editandoId, setEditandoId] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuarioStorage = localStorage.getItem("usuario");
+    const token = getAccessToken();
+    const usuarioStorage = getStoredUser();
 
     if (!token || !usuarioStorage) {
       router.push("/login");
       return;
     }
 
-    try {
-      const usuarioParse: UsuarioLogin = JSON.parse(usuarioStorage);
-
-      if (usuarioParse.acesso !== "administrador") {
-        router.push("/dashboard");
-        return;
-      }
-
-      setUsuarioLogado(usuarioParse);
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-      router.push("/login");
+    if (usuarioStorage.acesso !== "administrador") {
+      router.push("/dashboard");
+      return;
     }
+
+    if (!usuarioStorage.id) {
+      clearSession();
+      router.push("/login");
+      return;
+    }
+
+    setUsuarioLogado(usuarioStorage);
   }, [router]);
 
   async function carregarUsuarios() {
@@ -109,8 +109,8 @@ export default function UsuariosPage() {
       setErro("");
       const data = await listarUsuarios();
       setUsuarios(data);
-    } catch (error: any) {
-      setErro(error.message || "Erro ao carregar usuários");
+    } catch (error: unknown) {
+      setErro(getErrorMessage(error, "Erro ao carregar usuários"));
     } finally {
       setLoading(false);
     }
@@ -191,8 +191,8 @@ export default function UsuariosPage() {
 
       resetForm();
       await carregarUsuarios();
-    } catch (error: any) {
-      setErro(error.message || "Erro ao salvar usuário");
+    } catch (error: unknown) {
+      setErro(getErrorMessage(error, "Erro ao salvar usuário"));
     } finally {
       setSaving(false);
     }
@@ -208,14 +208,13 @@ export default function UsuariosPage() {
       await excluirUsuario(id);
       setSucesso("Usuário excluído com sucesso.");
       await carregarUsuarios();
-    } catch (error: any) {
-      setErro(error.message || "Erro ao excluir usuário");
+    } catch (error: unknown) {
+      setErro(getErrorMessage(error, "Erro ao excluir usuário"));
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+  async function handleLogout() {
+    await performLogout();
     router.push("/login");
   }
 

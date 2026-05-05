@@ -11,17 +11,18 @@ interface CompactModeContextType {
 const CompactModeContext = createContext<CompactModeContextType | undefined>(undefined)
 
 export function CompactModeProvider({ children }: { children: React.ReactNode }) {
-  const [isCompact, setIsCompactState] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const [isCompact, setIsCompactState] = useState(() => {
+    if (typeof window === "undefined") return false
+    return localStorage.getItem("compact-mode") === "true"
+  })
 
   useEffect(() => {
-    const saved = localStorage.getItem("compact-mode")
-    if (saved === "true") {
-      setIsCompactState(true)
+    if (isCompact) {
       document.documentElement.classList.add("compact")
+      return
     }
-    setMounted(true)
-  }, [])
+    document.documentElement.classList.remove("compact")
+  }, [isCompact])
 
   const setIsCompact = (value: boolean) => {
     setIsCompactState(value)

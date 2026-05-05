@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 
 import { login } from "@/services/users";
+import { hasSession, saveSession } from "@/services/authSession";
+import { getErrorMessage } from "@/lib/error-message";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,10 +33,7 @@ export default function LoginPage() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuario = localStorage.getItem("usuario");
-
-    if (token && usuario) {
+    if (hasSession()) {
       router.push("/dashboard");
     }
   }, [router]);
@@ -47,13 +46,15 @@ export default function LoginPage() {
       setErro("");
 
       const response = await login({ userLogin, senha });
-
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("usuario", JSON.stringify(response.usuario));
+      saveSession({
+        token: response.token,
+        refreshToken: response.refreshToken,
+        usuario: response.usuario,
+      });
 
       router.push("/dashboard");
-    } catch (error: any) {
-      setErro(error.message || "Erro ao fazer login");
+    } catch (error: unknown) {
+      setErro(getErrorMessage(error, "Erro ao fazer login"));
     } finally {
       setLoading(false);
     }

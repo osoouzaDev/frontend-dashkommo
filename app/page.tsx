@@ -2,22 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { clearSession, getStoredUser, hasSession } from "@/services/authSession";
 
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuario = localStorage.getItem("usuario");
-
-    if (!token || !usuario) {
+    if (!hasSession()) {
       router.replace("/login");
       return;
     }
 
     try {
-      const user = JSON.parse(usuario);
+      const user = getStoredUser();
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
 
       if (user.acesso === "administrador") {
         router.replace("/dashboard");
@@ -26,7 +28,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Erro ao ler usuário:", error);
-      localStorage.clear();
+      clearSession();
       router.replace("/login");
     } finally {
       setLoading(false);

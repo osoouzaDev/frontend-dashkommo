@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useCompactMode } from "@/components/compact-mode-provider";
+import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import { performLogout } from "@/services/logout";
 import {
   BarChart3,
   CheckCircle2,
@@ -44,7 +46,7 @@ import { Separator } from "@/components/ui/separator";
 type UsuarioLogin = {
   id: number;
   nome: string;
-  email: string;
+  email?: string;
   acesso: "administrador" | "usuario";
 };
 
@@ -54,14 +56,61 @@ type MenuItem = {
   href: string;
 };
 
+type ToggleCardProps = {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+};
+
+function ToggleCard({
+  icon: Icon,
+  title,
+  description,
+  checked,
+  onChange,
+}: ToggleCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/40"
+    >
+      <div className="flex items-start gap-3">
+        <div className="rounded-2xl bg-primary/10 p-2 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+
+        <div>
+          <p className="font-medium">{title}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+
+      <div
+        className={`relative h-7 w-12 rounded-full transition ${
+          checked ? "bg-primary" : "bg-muted"
+        }`}
+      >
+        <div
+          className={`absolute top-1 h-5 w-5 rounded-full bg-background shadow transition ${
+            checked ? "left-6" : "left-1"
+          }`}
+        />
+      </div>
+    </button>
+  );
+}
+
 export default function ConfiguracoesPage() {
   const router = useRouter();
   const pathname = usePathname();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [usuario, setUsuario] = useState<UsuarioLogin | null>(null);
+  const [usuario] = useState<UsuarioLogin | null>(() => getStoredUser());
 
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(() => getStoredUser()?.nome ?? "");
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
@@ -74,24 +123,13 @@ export default function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const usuarioStorage = localStorage.getItem("usuario");
+    const token = getAccessToken();
 
-    if (!token || !usuarioStorage) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const usuarioParse: UsuarioLogin = JSON.parse(usuarioStorage);
-      setUsuario(usuarioParse);
-      setNome(usuarioParse.nome);
-    } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
+    if (!token || !usuario) {
+      clearSession();
       router.push("/login");
     }
-  }, [router]);
+  }, [router, usuario]);
 
   function handleSalvarPerfil(e: React.FormEvent) {
     e.preventDefault();
@@ -111,9 +149,8 @@ export default function ConfiguracoesPage() {
     alert("Seu backend ainda não possui rota para alterar senha.");
   }
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+  async function handleLogout() {
+    await performLogout();
     router.push("/login");
   }
 
@@ -186,51 +223,6 @@ export default function ConfiguracoesPage() {
 
   const menuItems =
     usuario?.acesso === "administrador" ? menuAdmin : menuUsuario;
-
-  function ToggleCard({
-    icon: Icon,
-    title,
-    description,
-    checked,
-    onChange,
-  }: {
-    icon: React.ElementType;
-    title: string;
-    description: string;
-    checked: boolean;
-    onChange: (value: boolean) => void;
-  }) {
-    return (
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/40"
-      >
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-            <Icon className="h-4 w-4" />
-          </div>
-
-          <div>
-            <p className="font-medium">{title}</p>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
-        </div>
-
-        <div
-          className={`relative h-7 w-12 rounded-full transition ${
-            checked ? "bg-primary" : "bg-muted"
-          }`}
-        >
-          <div
-            className={`absolute top-1 h-5 w-5 rounded-full bg-background shadow transition ${
-              checked ? "left-6" : "left-1"
-            }`}
-          />
-        </div>
-      </button>
-    );
-  }
 
   if (!usuario) return null;
 
