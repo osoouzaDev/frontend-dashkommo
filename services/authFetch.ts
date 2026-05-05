@@ -103,7 +103,7 @@ async function executeFetch(
   const { auth = true, headers, body, signal, ...rest } = options;
   const token = getAccessToken();
   const isFormData = body instanceof FormData;
-  const timeout = withTimeout(signal);
+  const timeout = withTimeout(signal ?? undefined);
 
   try {
     const response = await fetch(`${api.baseURL}${endpoint}`, {
