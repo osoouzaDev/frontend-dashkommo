@@ -56,6 +56,20 @@ type FiltroEtapa = "todos" | "ganhos" | "perdidos" | "andamento";
 const STATUS_GANHO = 142;
 const STATUS_PERDIDO = 143;
 
+function obterDataReferencia(lead: RelatorioItem) {
+  const dataBase =
+    Number(lead.status_id) === STATUS_GANHO
+      ? lead.data_venda || lead.data_atualizacao || lead.data_criacao
+      : lead.data_criacao;
+
+  if (!dataBase) {
+    return null;
+  }
+
+  const data = new Date(dataBase);
+  return Number.isNaN(data.getTime()) ? null : data;
+}
+
 export default function LeadsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -174,8 +188,8 @@ export default function LeadsPage() {
 
   const leadsOrdenados = useMemo(() => {
     return [...leadsFiltrados].sort((a, b) => {
-      const dataA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0;
-      const dataB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0;
+      const dataA = obterDataReferencia(a)?.getTime() ?? 0;
+      const dataB = obterDataReferencia(b)?.getTime() ?? 0;
       return dataB - dataA;
     });
   }, [leadsFiltrados]);
@@ -708,10 +722,8 @@ export default function LeadsPage() {
                               {formatarMoeda(Number(lead.valor || 0))}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Criação:{" "}
-                              {lead.data_criacao
-                                ? new Date(lead.data_criacao).toLocaleString("pt-BR")
-                                : "-"}
+                              {ehGanho(lead) ? "Venda: " : "Criação: "}
+                              {obterDataReferencia(lead)?.toLocaleString("pt-BR") ?? "-"}
                             </p>
 
                             <Button

@@ -59,6 +59,7 @@ export interface RelatorioItem {
   valor: number;
   data_criacao: string | null;
   data_atualizacao: string | null;
+  data_venda: string | null;
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {

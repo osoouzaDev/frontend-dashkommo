@@ -90,6 +90,20 @@ const PIE_COLORS = [
 const STATUS_GANHO = 142;
 const STATUS_PERDIDO = 143;
 
+function obterDataReferencia(item: RelatorioItem) {
+  const dataBase =
+    Number(item.status_id) === STATUS_GANHO
+      ? item.data_venda || item.data_atualizacao || item.data_criacao
+      : item.data_criacao;
+
+  if (!dataBase) {
+    return null;
+  }
+
+  const data = new Date(dataBase);
+  return Number.isNaN(data.getTime()) ? null : data;
+}
+
 export default function RelatoriosPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -149,10 +163,8 @@ export default function RelatoriosPage() {
   const anosDisponiveis = useMemo(() => {
     const anos = relatorio
       .map((item) => {
-        if (!item.data_criacao) return null;
-        const data = new Date(item.data_criacao);
-        const ano = data.getFullYear();
-        return Number.isNaN(ano) ? null : ano;
+        const data = obterDataReferencia(item);
+        return data ? data.getFullYear() : null;
       })
       .filter((ano): ano is number => ano !== null);
 
@@ -178,11 +190,8 @@ export default function RelatoriosPage() {
 
   const relatorioFiltrado = useMemo(() => {
     return relatorio.filter((item) => {
-      if (!item.data_criacao) return false;
-
-      const data = new Date(item.data_criacao);
-
-      if (Number.isNaN(data.getTime())) {
+      const data = obterDataReferencia(item);
+      if (!data) {
         return false;
       }
 

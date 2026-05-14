@@ -56,6 +56,22 @@ type KanbanColumn = {
   total: number;
 };
 
+const STATUS_GANHO = 142;
+
+function obterDataReferencia(lead: RelatorioItem) {
+  const dataBase =
+    Number(lead.status_id) === STATUS_GANHO
+      ? lead.data_venda || lead.data_atualizacao || lead.data_criacao
+      : lead.data_criacao;
+
+  if (!dataBase) {
+    return null;
+  }
+
+  const data = new Date(dataBase);
+  return Number.isNaN(data.getTime()) ? null : data;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -207,8 +223,8 @@ export default function DashboardPage() {
       ([etapa, leads]) => ({
         etapa,
         leads: [...leads].sort((a, b) => {
-          const dataA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0;
-          const dataB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0;
+          const dataA = obterDataReferencia(a)?.getTime() ?? 0;
+          const dataB = obterDataReferencia(b)?.getTime() ?? 0;
           return dataB - dataA;
         }),
         total: leads.reduce((acc, item) => acc + Number(item.valor || 0), 0),
@@ -801,11 +817,8 @@ export default function DashboardPage() {
                                         </div>
 
                                         <span className="shrink-0 text-xs text-muted-foreground">
-                                          {lead.data_criacao
-                                            ? new Date(
-                                                lead.data_criacao
-                                              ).toLocaleDateString("pt-BR")
-                                            : "--"}
+                                          {obterDataReferencia(lead)?.toLocaleDateString("pt-BR") ??
+                                            "--"}
                                         </span>
                                       </div>
 
