@@ -1,19 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   FileText,
   Home,
-  LogOut,
   Mail,
-  Menu,
   Pencil,
   Search,
   Settings,
   Shield,
-  Sparkles,
   Trash2,
   User,
   UserCog,
@@ -31,7 +28,11 @@ import {
   type UpdateUserPayload,
   type UsuarioLogin,
 } from "@/services/users";
-import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import {
+  clearSession,
+  getAccessToken,
+  getStoredUser,
+} from "@/services/authSession";
 import { performLogout } from "@/services/logout";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -47,6 +48,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AppShell } from "@/components/app-shell";
+import { StatCard } from "@/components/stat-card";
 
 const initialForm = {
   nome: "",
@@ -67,9 +70,6 @@ const menuItems = [
 
 export default function UsuariosPage() {
   const router = useRouter();
-  const pathname = usePathname();
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usuarioLogado, setUsuarioLogado] = useState<UsuarioLogin | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,270 +273,78 @@ export default function UsuariosPage() {
   if (!usuarioLogado) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/40">
-      <div className="flex min-h-screen">
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+    <AppShell
+      user={usuarioLogado}
+      menuItems={menuItems}
+      title="Usuários"
+      subtitle="Gerencie acessos, perfis e estrutura do sistema"
+      eyebrow="Central administrativa"
+      heroTitle={`${saudacao()}, ${usuarioLogado.nome}`}
+      heroDescription="Cadastre, edite e acompanhe os usuários do sistema em uma experiência mais organizada, elegante e preparada para uso real, com foco em administração e clareza operacional."
+      footerLabel="© DashKommo. Gestão de usuários do sistema."
+      onLogout={handleLogout}
+      heroBadges={
+        <>
+          <Badge className="rounded-full px-4 py-2">
+            {metricas.total} usuários
+          </Badge>
+          <Badge variant="outline" className="rounded-full px-4 py-2">
+            {metricas.setores} setores
+          </Badge>
+        </>
+      }
+    >
+      {erro ? (
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
+          {erro}
+        </div>
+      ) : null}
 
-        <aside
-          className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r bg-background/95 backdrop-blur transition-transform duration-300 lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="border-b px-6 py-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold tracking-tight">DashKommo</h1>
-                  <p className="text-xs text-muted-foreground">
-                    Gestão de usuários
-                  </p>
-                </div>
-              </div>
+      {sucesso ? (
+        <div className="mb-6 rounded-2xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-700 shadow-sm">
+          {sucesso}
+        </div>
+      ) : null}
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total de usuários"
+          description="cadastros ativos"
+          value={metricas.total}
+          hint="Total registrado no backend"
+          icon={Users}
+          loading={loading}
+        />
+        <StatCard
+          title="Administradores"
+          description="acesso elevado"
+          value={metricas.administradores}
+          hint="Perfis com acesso administrativo"
+          icon={Shield}
+          loading={loading}
+        />
+        <StatCard
+          title="Usuários comuns"
+          description="operação diária"
+          value={metricas.usuariosComuns}
+          hint="Perfis sem privilégio administrativo"
+          icon={User}
+          tone="warning"
+          loading={loading}
+        />
+        <StatCard
+          title="Setores"
+          description="distribuição interna"
+          value={metricas.setores}
+          hint="Áreas presentes na base"
+          icon={UserCog}
+          tone="success"
+          loading={loading}
+        />
+      </section>
 
-          <div className="px-4 py-4">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-transparent shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarFallback>
-                      {getInitials(usuarioLogado.nome)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
-                      {usuarioLogado.nome}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Perfil: {usuarioLogado.acesso}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex-1 space-y-2 px-4 pb-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-
-              return (
-                <Button
-                  key={item.label}
-                  variant={active ? "default" : "ghost"}
-                  className={`h-11 w-full justify-start gap-3 rounded-xl ${
-                    active ? "shadow-sm" : ""
-                  }`}
-                  onClick={() => {
-                    router.push(item.href);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="border-t p-4">
-            <Button
-              variant="destructive"
-              className="h-11 w-full gap-2 rounded-xl"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="flex flex-1 flex-col lg:pl-72">
-          <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
-            <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl lg:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    Usuários
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Gerencie acessos, perfis e estrutura do sistema
-                  </p>
-                </div>
-              </div>
-
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>{getInitials(usuarioLogado.nome)}</AvatarFallback>
-              </Avatar>
-            </div>
-          </header>
-
-          <main className="flex-1 px-4 py-6 lg:px-6">
-            <section className="mb-6">
-              <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-primary">
-                        <Sparkles className="h-4 w-4" />
-                        Central administrativa
-                      </div>
-                      <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-                        {saudacao()}, {usuarioLogado.nome}
-                      </h1>
-                      <p className="max-w-2xl text-sm text-muted-foreground">
-                        Cadastre, edite e acompanhe os usuários do sistema em uma
-                        interface mais organizada, elegante e preparada para uso
-                        real.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Badge className="rounded-full px-4 py-2">
-                        {metricas.total} usuários
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full px-4 py-2">
-                        {metricas.setores} setores
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {erro ? (
-              <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
-                {erro}
-              </div>
-            ) : null}
-
-            {sucesso ? (
-              <div className="mb-6 rounded-2xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-700 shadow-sm">
-                {sucesso}
-              </div>
-            ) : null}
-
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total de usuários
-                    </CardTitle>
-                    <CardDescription>cadastros ativos</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <Users className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.total}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Total registrado no backend
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Administradores
-                    </CardTitle>
-                    <CardDescription>acesso elevado</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <Shield className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.administradores}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Perfis com acesso administrativo
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Usuários comuns
-                    </CardTitle>
-                    <CardDescription>operação diária</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <User className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.usuariosComuns}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Perfis sem privilégio administrativo
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Setores
-                    </CardTitle>
-                    <CardDescription>distribuição interna</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <UserCog className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.setores}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Áreas presentes na base
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_1.4fr]">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_1.4fr]">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>
                     {editandoId ? "Editar usuário" : "Novo usuário"}
@@ -661,9 +469,9 @@ export default function UsuariosPage() {
                     </div>
                   </form>
                 </CardContent>
-              </Card>
+        </Card>
 
-              <Card className="rounded-3xl shadow-sm">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <CardTitle>Lista de usuários</CardTitle>
@@ -766,11 +574,11 @@ export default function UsuariosPage() {
                     ))
                   )}
                 </CardContent>
-              </Card>
-            </section>
+        </Card>
+      </section>
 
-            <section className="mt-6">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Resumo da administração</CardTitle>
                   <CardDescription>
@@ -807,18 +615,8 @@ export default function UsuariosPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            </section>
-          </main>
-
-          <footer className="border-t bg-background/80 px-4 py-4 backdrop-blur lg:px-6">
-            <div className="flex flex-col items-center justify-between gap-2 text-sm text-muted-foreground md:flex-row">
-              <p>© DashKommo. Gestão de usuários do sistema.</p>
-              <p>Developed by soouzaDev</p>
-            </div>
-          </footer>
-        </div>
-      </div>
-    </div>
+        </Card>
+      </section>
+    </AppShell>
   );
 }

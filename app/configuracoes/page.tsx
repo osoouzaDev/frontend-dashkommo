@@ -386,7 +386,7 @@ export default function ConfiguracoesPage() {
 
           <main className="flex-1 px-4 py-6 lg:px-6">
             <section className="mb-6">
-              <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent shadow-lg">
+              <Card className="glass-card gradient-border overflow-hidden border-0 bg-gradient-to-r from-primary/18 via-primary/10 to-transparent shadow-xl">
                 <CardContent className="p-6">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-2">
@@ -427,9 +427,59 @@ export default function ConfiguracoesPage() {
               </Card>
             </section>
 
+            <section className="mb-6 grid gap-4 md:grid-cols-3">
+              <Card className="glass-card rounded-3xl border-0 shadow-sm">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+                    <User2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                      Perfil
+                    </p>
+                    <p className="mt-1 text-base font-semibold">
+                      {nome || usuario.nome}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card rounded-3xl border-0 shadow-sm">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+                    <Palette className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                      Aparência
+                    </p>
+                    <p className="mt-1 text-base font-semibold capitalize">
+                      Tema {theme === "system" ? "automático" : theme}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card rounded-3xl border-0 shadow-sm">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+                    <MonitorCog className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                      Layout
+                    </p>
+                    <p className="mt-1 text-base font-semibold">
+                      {isCompact ? "Modo compacto" : "Modo confort"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
             <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
               <div className="space-y-6">
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Perfil</CardTitle>
                     <CardDescription>
@@ -486,12 +536,12 @@ export default function ConfiguracoesPage() {
                       </Button>
                     </form>
 
-                    <div className="rounded-3xl border bg-muted/20 p-5">
+                    <div className="rounded-3xl border border-white/10 bg-muted/20 p-5">
                       <p className="mb-4 text-sm font-medium text-muted-foreground">
                         Prévia do perfil
                       </p>
 
-                      <div className="rounded-3xl border bg-background p-5 shadow-sm">
+                      <div className="rounded-3xl border border-white/10 bg-background/80 p-5 shadow-sm">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-14 w-14">
                             <AvatarFallback>
@@ -528,7 +578,7 @@ export default function ConfiguracoesPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Segurança</CardTitle>
                     <CardDescription>
@@ -623,7 +673,7 @@ export default function ConfiguracoesPage() {
                       </Button>
                     </form>
 
-                    <div className="space-y-4 rounded-3xl border bg-muted/20 p-5">
+                    <div className="space-y-4 rounded-3xl border border-white/10 bg-muted/20 p-5">
                       <div>
                         <p className="text-sm font-medium">Força da senha</p>
                         <p className="text-xs text-muted-foreground">
@@ -642,7 +692,7 @@ export default function ConfiguracoesPage() {
                         {forcaSenha.label}
                       </Badge>
 
-                      <div className="rounded-2xl border bg-background p-4 text-sm text-muted-foreground">
+                      <div className="rounded-2xl border border-white/10 bg-background/80 p-4 text-sm text-muted-foreground">
                         Para uma senha forte, use letras maiúsculas, minúsculas,
                         números e símbolos.
                       </div>
@@ -650,7 +700,7 @@ export default function ConfiguracoesPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Preferências de experiência</CardTitle>
                     <CardDescription>
@@ -671,7 +721,7 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="space-y-6">
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Tema</CardTitle>
                     <CardDescription>
@@ -685,7 +735,7 @@ export default function ConfiguracoesPage() {
                       onClick={() => setTheme("system")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
                         theme === "system"
-                          ? "border-primary bg-primary/5"
+                          ? "border-primary/40 bg-primary/8 shadow-sm"
                           : "hover:bg-muted/40"
                       }`}
                     >
@@ -708,7 +758,7 @@ export default function ConfiguracoesPage() {
                       onClick={() => setTheme("light")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
                         theme === "light"
-                          ? "border-primary bg-primary/5"
+                          ? "border-primary/40 bg-primary/8 shadow-sm"
                           : "hover:bg-muted/40"
                       }`}
                     >
@@ -731,7 +781,7 @@ export default function ConfiguracoesPage() {
                       onClick={() => setTheme("dark")}
                       className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
                         theme === "dark"
-                          ? "border-primary bg-primary/5"
+                          ? "border-primary/40 bg-primary/8 shadow-sm"
                           : "hover:bg-muted/40"
                       }`}
                     >
@@ -751,7 +801,7 @@ export default function ConfiguracoesPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Conta e sessão</CardTitle>
                     <CardDescription>
@@ -798,7 +848,7 @@ export default function ConfiguracoesPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-3xl border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle>Atalhos rápidos</CardTitle>
                     <CardDescription>Navegação inteligente</CardDescription>

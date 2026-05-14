@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   CalendarRange,
   ChevronRight,
   FileText,
   Home,
-  LogOut,
-  Menu,
   Settings,
-  Sparkles,
   Target,
   TrendingDown,
   TrendingUp,
@@ -36,7 +33,11 @@ import {
   type RelatorioItem,
   type UsuarioLogin,
 } from "@/services/users";
-import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import {
+  clearSession,
+  getAccessToken,
+  getStoredUser,
+} from "@/services/authSession";
 import { performLogout } from "@/services/logout";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -48,9 +49,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AppShell } from "@/components/app-shell";
+import { StatCard } from "@/components/stat-card";
 
 const menuItems = [
   { icon: Home, label: "Início", href: "/dashboard" },
@@ -106,9 +108,6 @@ function obterDataReferencia(item: RelatorioItem) {
 
 export default function RelatoriosPage() {
   const router = useRouter();
-  const pathname = usePathname();
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usuario, setUsuario] = useState<UsuarioLogin | null>(null);
   const [relatorio, setRelatorio] = useState<RelatorioItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,16 +298,6 @@ export default function RelatoriosPage() {
     router.push("/login");
   }
 
-  function getInitials(nome?: string) {
-    if (!nome) return "US";
-
-    return nome
-      .split(" ")
-      .slice(0, 2)
-      .map((parte) => parte[0]?.toUpperCase())
-      .join("");
-  }
-
   function saudacao() {
     const hora = new Date().getHours();
     if (hora < 12) return "Bom dia";
@@ -319,285 +308,97 @@ export default function RelatoriosPage() {
   if (!usuario) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/40">
-      <div className="flex min-h-screen">
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+    <AppShell
+      user={usuario}
+      menuItems={menuItems}
+      title="Relatórios"
+      subtitle="Métricas consolidadas e visão estratégica do funil"
+      eyebrow="Painel analítico premium"
+      heroTitle={`${saudacao()}, ${usuario.nome}`}
+      heroDescription="Analise a performance do período com muito mais clareza, identifique padrões por origem, acompanhe a distribuição por consultor e enxergue os resultados com um acabamento visual muito mais executivo."
+      footerLabel="© DashKommo. Relatórios do sistema."
+      onLogout={handleLogout}
+      headerExtras={
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={anoSelecionado}
+            onChange={(e) => setAnoSelecionado(e.target.value)}
+            className="h-11 rounded-2xl border border-input bg-background/80 px-4 py-2 text-sm"
+          >
+            {anosDisponiveis.map((ano) => (
+              <option key={ano.value} value={ano.value}>
+                {ano.label}
+              </option>
+            ))}
+          </select>
 
-        <aside
-          className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r bg-background/95 backdrop-blur transition-transform duration-300 lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="border-b px-6 py-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold tracking-tight">DashKommo</h1>
-                  <p className="text-xs text-muted-foreground">
-                    Central analítica
-                  </p>
-                </div>
-              </div>
+          <select
+            value={mesSelecionado}
+            onChange={(e) => setMesSelecionado(e.target.value)}
+            className="h-11 rounded-2xl border border-input bg-background/80 px-4 py-2 text-sm"
+          >
+            {meses.map((mes) => (
+              <option key={mes.value} value={mes.value}>
+                {mes.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      }
+      heroBadges={
+        <>
+          <Badge className="rounded-full px-4 py-2">{mesAtualLabel}</Badge>
+          <Badge variant="outline" className="rounded-full px-4 py-2">
+            {anoSelecionado}
+          </Badge>
+        </>
+      }
+    >
+      {erro ? (
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
+          {erro}
+        </div>
+      ) : null}
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total de leads"
+          description="no período"
+          value={metricas.totalLeads}
+          hint="Registros considerados no filtro"
+          icon={FileText}
+          loading={loading}
+        />
+        <StatCard
+          title="Valor total"
+          description="leads ganhos"
+          value={formatarMoeda(metricas.valorTotal)}
+          hint="Soma apenas dos ganhos"
+          icon={Wallet}
+          tone="success"
+          loading={loading}
+        />
+        <StatCard
+          title="Ganhos"
+          description="conversões positivas"
+          value={metricas.ganhos}
+          hint="Leads com status de ganho"
+          icon={TrendingUp}
+          loading={loading}
+        />
+        <StatCard
+          title="Perdidos"
+          description="oportunidades encerradas"
+          value={metricas.perdidos}
+          hint="Leads com status de perdido"
+          icon={TrendingDown}
+          tone="danger"
+          loading={loading}
+        />
+      </section>
 
-          <div className="px-4 py-4">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-transparent shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{usuario.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Perfil: {usuario.acesso}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex-1 space-y-2 px-4 pb-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-
-              return (
-                <Button
-                  key={item.label}
-                  variant={active ? "default" : "ghost"}
-                  className={`h-11 w-full justify-start gap-3 rounded-xl ${
-                    active ? "shadow-sm" : ""
-                  }`}
-                  onClick={() => {
-                    router.push(item.href);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="border-t p-4">
-            <Button
-              variant="destructive"
-              className="h-11 w-full gap-2 rounded-xl"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="flex flex-1 flex-col lg:pl-72">
-          <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
-            <div className="flex min-h-16 flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl lg:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    Relatórios
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Métricas consolidadas e visão estratégica do funil
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <select
-                  value={anoSelecionado}
-                  onChange={(e) => setAnoSelecionado(e.target.value)}
-                  className="h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm"
-                >
-                  {anosDisponiveis.map((ano) => (
-                    <option key={ano.value} value={ano.value}>
-                      {ano.label}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={mesSelecionado}
-                  onChange={(e) => setMesSelecionado(e.target.value)}
-                  className="h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm"
-                >
-                  {meses.map((mes) => (
-                    <option key={mes.value} value={mes.value}>
-                      {mes.label}
-                    </option>
-                  ))}
-                </select>
-
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 px-4 py-6 lg:px-6">
-            {erro ? (
-              <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
-                {erro}
-              </div>
-            ) : null}
-
-            <section className="mb-6">
-              <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-primary">
-                        <Sparkles className="h-4 w-4" />
-                        Painel executivo
-                      </div>
-                      <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-                        {saudacao()}, {usuario.nome}
-                      </h1>
-                      <p className="max-w-2xl text-sm text-muted-foreground">
-                        Analise a performance do período com mais clareza,
-                        identifique padrões por origem e acompanhe a distribuição
-                        dos leads por consultor e resultado.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Badge className="rounded-full px-4 py-2">
-                        {mesAtualLabel}
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full px-4 py-2">
-                        {anoSelecionado}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total de leads
-                    </CardTitle>
-                    <CardDescription>no período</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.totalLeads}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Registros considerados no filtro
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Valor total
-                    </CardTitle>
-                    <CardDescription>leads ganhos</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <Wallet className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold tracking-tight">
-                    {loading ? "..." : formatarMoeda(metricas.valorTotal)}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Soma apenas dos ganhos
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Ganhos
-                    </CardTitle>
-                    <CardDescription>conversões positivas</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.ganhos}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Leads com status de ganho
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Perdidos
-                    </CardTitle>
-                    <CardDescription>oportunidades encerradas</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-destructive/10 p-2 text-destructive">
-                    <TrendingDown className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.perdidos}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Leads com status de perdido
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Visão geral do período</CardTitle>
                   <CardDescription>
@@ -642,9 +443,9 @@ export default function RelatoriosPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+        </Card>
 
-              <Card className="rounded-3xl shadow-sm">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Distribuição rápida</CardTitle>
                   <CardDescription>Ganhos x perdidos x em andamento</CardDescription>
@@ -727,11 +528,11 @@ export default function RelatoriosPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            </section>
+        </Card>
+      </section>
 
-            <section className="mt-6 grid gap-6 lg:grid-cols-2">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Leads por origem</CardTitle>
                   <CardDescription>
@@ -795,9 +596,9 @@ export default function RelatoriosPage() {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+        </Card>
 
-              <Card className="rounded-3xl shadow-sm">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Leads por consultor</CardTitle>
                   <CardDescription>
@@ -846,11 +647,11 @@ export default function RelatoriosPage() {
                     ))
                   )}
                 </CardContent>
-              </Card>
-            </section>
+        </Card>
+      </section>
 
-            <section className="mt-6">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <CardTitle>Resumo analítico</CardTitle>
@@ -899,18 +700,8 @@ export default function RelatoriosPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            </section>
-          </main>
-
-          <footer className="border-t bg-background/80 px-4 py-4 backdrop-blur lg:px-6">
-            <div className="flex flex-col items-center justify-between gap-2 text-sm text-muted-foreground md:flex-row">
-              <p>© DashKommo. Relatórios do sistema.</p>
-              <p>Developed by soouzaDev</p>
-            </div>
-          </footer>
-        </div>
-      </div>
-    </div>
+        </Card>
+      </section>
+    </AppShell>
   );
 }

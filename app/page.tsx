@@ -37,8 +37,16 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-muted-foreground">Carregando...</p>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+        <div className="glass-card gradient-border w-full max-w-md rounded-[2rem] border-0 p-8 text-center shadow-[0_30px_80px_rgba(17,24,39,0.18)]">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-primary/15">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">DashKommo</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Preparando seu workspace e redirecionando para o painel.
+          </p>
+        </div>
       </div>
     );
   }

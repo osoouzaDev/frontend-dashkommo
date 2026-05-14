@@ -1,7 +1,7 @@
 "use client";
 
 import { type ComponentProps, useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   Briefcase,
@@ -10,11 +10,8 @@ import {
   FileText,
   Filter,
   Home,
-  LogOut,
-  Menu,
   Search,
   Settings,
-  Sparkles,
   Target,
   TrendingDown,
   TrendingUp,
@@ -40,8 +37,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { AppShell } from "@/components/app-shell";
+import { StatCard } from "@/components/stat-card";
 
 const menuItems = [
   { icon: Home, label: "Início", href: "/dashboard" },
@@ -72,9 +70,6 @@ function obterDataReferencia(lead: RelatorioItem) {
 
 export default function LeadsPage() {
   const router = useRouter();
-  const pathname = usePathname();
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usuario, setUsuario] = useState<UsuarioLogin | null>(null);
   const [leads, setLeads] = useState<RelatorioItem[]>([]);
   const [filtro, setFiltro] = useState("");
@@ -218,16 +213,6 @@ export default function LeadsPage() {
     router.push("/login");
   }
 
-  function getInitials(nome?: string) {
-    if (!nome) return "US";
-
-    return nome
-      .split(" ")
-      .slice(0, 2)
-      .map((parte) => parte[0]?.toUpperCase())
-      .join("");
-  }
-
   function saudacao() {
     const hora = new Date().getHours();
 
@@ -244,252 +229,66 @@ export default function LeadsPage() {
   if (!usuario) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/40">
-      <div className="flex min-h-screen">
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+    <AppShell
+      user={usuario}
+      menuItems={menuItems}
+      title="Leads"
+      subtitle="Gestão visual e estratégica do funil"
+      eyebrow="Funil inteligente"
+      heroTitle={`${saudacao()}, ${usuario.nome}`}
+      heroDescription="Acompanhe os leads do sistema com muito mais clareza, aplique filtros rápidos e visualize o andamento do funil em uma central muito mais sofisticada e profissional."
+      footerLabel="© DashKommo. Gestão de leads do sistema."
+      onLogout={handleLogout}
+      heroBadges={
+        <>
+          <Badge className="rounded-full px-4 py-2">
+            {loading ? "..." : `${metricas.total} leads`}
+          </Badge>
+          <Badge variant="outline" className="rounded-full px-4 py-2">
+            {loading ? "..." : `${metricas.consultores} consultores`}
+          </Badge>
+        </>
+      }
+    >
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total de leads"
+          description="visão geral"
+          value={metricas.total}
+          hint="Registros processados pelo backend"
+          icon={Briefcase}
+          loading={loading}
+        />
+        <StatCard
+          title="Ganhos"
+          description="conversão positiva"
+          value={metricas.ganhos}
+          hint="Leads com status de ganho"
+          icon={TrendingUp}
+          loading={loading}
+        />
+        <StatCard
+          title="Perdidos"
+          description="oportunidades encerradas"
+          value={metricas.perdidos}
+          hint="Leads com status de perdido"
+          icon={TrendingDown}
+          tone="danger"
+          loading={loading}
+        />
+        <StatCard
+          title="Valor ganho"
+          description="resultado acumulado"
+          value={formatarMoeda(metricas.valorGanho)}
+          hint="Soma financeira apenas dos ganhos"
+          icon={CircleDollarSign}
+          tone="success"
+          loading={loading}
+        />
+      </section>
 
-        <aside
-          className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r bg-background/95 backdrop-blur transition-transform duration-300 lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="border-b px-6 py-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold tracking-tight">DashKommo</h1>
-                  <p className="text-xs text-muted-foreground">
-                    Central de leads
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="px-4 py-4">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-transparent shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-                  </Avatar>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{usuario.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Perfil: {usuario.acesso}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex-1 space-y-2 px-4 pb-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-
-              return (
-                <Button
-                  key={item.label}
-                  variant={active ? "default" : "ghost"}
-                  className={`h-11 w-full justify-start gap-3 rounded-xl ${
-                    active ? "shadow-sm" : ""
-                  }`}
-                  onClick={() => {
-                    router.push(item.href);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="border-t p-4">
-            <Button
-              variant="destructive"
-              className="h-11 w-full gap-2 rounded-xl"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="flex flex-1 flex-col lg:pl-72">
-          <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
-            <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl lg:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight">Leads</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Gestão visual e estratégica do funil
-                  </p>
-                </div>
-              </div>
-
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-              </Avatar>
-            </div>
-          </header>
-
-          <main className="flex-1 px-4 py-6 lg:px-6">
-            <section className="mb-6">
-              <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-primary">
-                        <Sparkles className="h-4 w-4" />
-                        Funil inteligente
-                      </div>
-                      <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-                        {saudacao()}, {usuario.nome}
-                      </h1>
-                      <p className="max-w-2xl text-sm text-muted-foreground">
-                        Acompanhe os leads do sistema com mais clareza, aplique
-                        filtros rápidos e visualize o andamento do funil em uma
-                        central mais moderna e profissional.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Badge className="rounded-full px-4 py-2">
-                        {loading ? "..." : `${metricas.total} leads`}
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full px-4 py-2">
-                        {loading ? "..." : `${metricas.consultores} consultores`}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total de leads
-                    </CardTitle>
-                    <CardDescription>visão geral</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <Briefcase className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.total}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Registros processados pelo backend
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Ganhos
-                    </CardTitle>
-                    <CardDescription>conversão positiva</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.ganhos}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Leads com status de ganho
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Perdidos
-                    </CardTitle>
-                    <CardDescription>oportunidades encerradas</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-destructive/10 p-2 text-destructive">
-                    <TrendingDown className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold tracking-tight">
-                    {loading ? "..." : metricas.perdidos}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Leads com status de perdido
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Valor ganho
-                    </CardTitle>
-                    <CardDescription>resultado acumulado</CardDescription>
-                  </div>
-                  <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                    <CircleDollarSign className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold tracking-tight">
-                    {loading ? "..." : formatarMoeda(metricas.valorGanho)}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Soma financeira apenas dos ganhos
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Explorar leads</CardTitle>
                   <CardDescription>
@@ -546,9 +345,9 @@ export default function LeadsPage() {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
+        </Card>
 
-              <Card className="rounded-3xl shadow-sm">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle>Resumo do funil</CardTitle>
                   <CardDescription>Distribuição atual</CardDescription>
@@ -619,17 +418,17 @@ export default function LeadsPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            </section>
+        </Card>
+      </section>
 
-            {erro ? (
-              <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
-                {erro}
-              </div>
-            ) : null}
+      {erro ? (
+        <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
+          {erro}
+        </div>
+      ) : null}
 
-            <section className="mt-6">
-              <Card className="rounded-3xl shadow-sm">
+      <section className="mt-6">
+        <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                 <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <CardTitle>Resultados</CardTitle>
@@ -741,18 +540,8 @@ export default function LeadsPage() {
                     ))
                   )}
                 </CardContent>
-              </Card>
-            </section>
-          </main>
-
-          <footer className="border-t bg-background/80 px-4 py-4 backdrop-blur lg:px-6">
-            <div className="flex flex-col items-center justify-between gap-2 text-sm text-muted-foreground md:flex-row">
-              <p>© DashKommo. Gestão de leads do sistema.</p>
-              <p>Developed by soouzaDev</p>
-            </div>
-          </footer>
-        </div>
-      </div>
-    </div>
+        </Card>
+      </section>
+    </AppShell>
   );
 }

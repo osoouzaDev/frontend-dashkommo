@@ -6,15 +6,12 @@ import {
   BarChart3,
   FileText,
   Home,
-  LogOut,
-  Menu,
   Settings,
   Shield,
   TrendingDown,
   TrendingUp,
   Users,
   Wallet,
-  Sparkles,
   Briefcase,
   ChevronRight,
 } from "lucide-react";
@@ -35,6 +32,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AppShell } from "@/components/app-shell";
+import { StatCard } from "@/components/stat-card";
 
 import {
   buscarRelatorio,
@@ -324,398 +323,179 @@ export default function DashboardPage() {
   if (!usuario) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="flex min-h-screen">
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        <aside
-          className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r bg-background/95 backdrop-blur transition-transform duration-300 lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+    <AppShell
+      user={usuario}
+      menuItems={menuItems}
+      title="Dashboard"
+      subtitle="Visão geral da operação"
+      eyebrow="Painel executivo renovado"
+      heroTitle={`${saudacao()}, ${usuario.nome}`}
+      heroDescription="Acompanhe usuários, leads, consultores e resultados do funil em uma experiência muito mais sofisticada, com leitura rápida, organização premium e foco total na operação."
+      footerLabel="© DashKommo. Dashboard do sistema."
+      onLogout={handleLogout}
+      headerExtras={
+        <Badge
+          variant={usuario.acesso === "administrador" ? "default" : "secondary"}
+          className="rounded-full px-3 py-1"
         >
-          <div className="border-b px-6 py-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                    <Sparkles className="h-5 w-5" />
+          {usuario.acesso === "administrador" ? "Administrador" : "Usuário"}
+        </Badge>
+      }
+      heroActions={
+        <>
+          <Button className="rounded-2xl" onClick={() => router.push("/relatorios")}>
+            Ver relatórios
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() =>
+              router.push(
+                usuario.acesso === "administrador"
+                  ? "/usuarios"
+                  : "/configuracoes"
+              )
+            }
+          >
+            {usuario.acesso === "administrador"
+              ? "Gerenciar usuários"
+              : "Abrir configurações"}
+          </Button>
+        </>
+      }
+      heroBadges={
+        <>
+          <Badge className="rounded-full px-4 py-2">
+            {usuario.acesso === "administrador" ? "Modo gestão" : "Painel pessoal"}
+          </Badge>
+          <Badge variant="outline" className="rounded-full px-4 py-2">
+            Atualização automática a cada 30s
+          </Badge>
+        </>
+      }
+    >
+      {erro ? (
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
+          {erro}
+        </div>
+      ) : null}
+
+      {usuario.acesso !== "administrador" ? (
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <Card className="glass-card rounded-[1.8rem] border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle>Bem-vindo ao seu painel</CardTitle>
+              <CardDescription>
+                Seu acesso está ativo e seu ambiente já está pronto para uso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <p>
+                Você está autenticado com sucesso. Aqui você pode evoluir o painel
+                para exibir perfil, solicitações, reservas e outras funcionalidades
+                específicas do usuário.
+              </p>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => router.push("/dashboard")}
+                  className="rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-left transition hover:bg-muted/60"
+                >
+                  <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                    <Home className="h-4 w-4" />
+                    Meu painel
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold tracking-tight">
-                      DashKommo
-                    </h1>
-                    <p className="text-xs text-muted-foreground">
-                      Painel inteligente
-                    </p>
+                  <p className="text-xs text-muted-foreground">
+                    Visualize seu ambiente principal.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/configuracoes")}
+                  className="rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-left transition hover:bg-muted/60"
+                >
+                  <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                    <Settings className="h-4 w-4" />
+                    Configurações
                   </div>
-                </div>
+                  <p className="text-xs text-muted-foreground">
+                    Atualize suas preferências e dados.
+                  </p>
+                </button>
               </div>
+            </CardContent>
+          </Card>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="px-4 py-4">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-transparent shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
-                      {usuario.nome}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Perfil: {usuario.acesso}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex-1 space-y-2 px-4 pb-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const ativo = pathname === item.href;
-
-              return (
-                <Button
-                  key={item.label}
-                  variant={ativo ? "default" : "ghost"}
-                  className={`h-11 w-full justify-start gap-3 rounded-xl ${
-                    ativo ? "shadow-sm" : ""
-                  }`}
-                  onClick={() => {
-                    router.push(item.href);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="border-t p-4">
-            <Button
-              variant="destructive"
-              className="h-11 w-full gap-2 rounded-xl"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="flex flex-1 flex-col lg:pl-72">
-          <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
-            <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl lg:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
+          <Card className="glass-card rounded-[1.8rem] border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle>Seu perfil</CardTitle>
+              <CardDescription>Informações atuais</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4 rounded-[1.4rem] border border-white/10 bg-background/70 p-4">
+                <Avatar className="h-14 w-14 ring-2 ring-primary/15">
+                  <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
+                </Avatar>
 
                 <div>
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    Dashboard
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Visão geral da operação
+                  <p className="font-semibold">{usuario.nome}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Perfil: {usuario.acesso}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Badge
-                  variant={
-                    usuario.acesso === "administrador" ? "default" : "secondary"
-                  }
-                  className="rounded-full px-3 py-1"
-                >
-                  {usuario.acesso === "administrador"
-                    ? "Administrador"
-                    : "Usuário"}
-                </Badge>
-
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{getInitials(usuario.nome)}</AvatarFallback>
-                </Avatar>
+              <div className="rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-sm text-muted-foreground">
+                Seu acesso atual é ideal para páginas operacionais e pessoais.
+                Recursos administrativos permanecem protegidos.
               </div>
-            </div>
-          </header>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Usuários"
+              description="cadastrados"
+              value={metricas.totalUsuarios}
+              hint="Quantidade total no sistema"
+              icon={Users}
+              loading={loading}
+            />
+            <StatCard
+              title="Leads"
+              description="registrados"
+              value={metricas.totalLeads}
+              hint="Total atual no funil de vendas"
+              icon={FileText}
+              loading={loading}
+            />
+            <StatCard
+              title="Valor total"
+              description="leads ganhos"
+              value={formatarMoeda(metricas.totalValor)}
+              hint="Soma apenas dos ganhos"
+              icon={Wallet}
+              tone="success"
+              loading={loading}
+            />
+            <StatCard
+              title="Consultores"
+              description="ativos no funil"
+              value={metricas.consultoresUnicos}
+              hint="Com leads vinculados"
+              icon={Shield}
+              tone="warning"
+              loading={loading}
+            />
+          </section>
 
-          <main className="flex-1 px-4 py-6 lg:px-6">
-            {erro ? (
-              <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-sm">
-                {erro}
-              </div>
-            ) : null}
-
-            <section className="mb-6">
-              <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-primary">
-                        <Sparkles className="h-4 w-4" />
-                        Painel atualizado
-                      </div>
-                      <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-                        {saudacao()}, {usuario.nome}
-                      </h1>
-                      <p className="max-w-2xl text-sm text-muted-foreground">
-                        Acompanhe usuários, leads, consultores e resultados do
-                        funil em um só lugar, com uma visão clara e moderna da
-                        operação.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Button
-                        className="rounded-xl"
-                        onClick={() => router.push("/relatorios")}
-                      >
-                        Ver relatórios
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        className="rounded-xl"
-                        onClick={() =>
-                          router.push(
-                            usuario.acesso === "administrador"
-                              ? "/usuarios"
-                              : "/configuracoes"
-                          )
-                        }
-                      >
-                        {usuario.acesso === "administrador"
-                          ? "Gerenciar usuários"
-                          : "Abrir configurações"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            {usuario.acesso !== "administrador" ? (
-              <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-                <Card className="rounded-3xl shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Bem-vindo ao seu painel</CardTitle>
-                    <CardDescription>
-                      Seu acesso está ativo e seu ambiente já está pronto para
-                      uso.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-sm text-muted-foreground">
-                    <p>
-                      Você está autenticado com sucesso. Aqui você pode evoluir
-                      o painel para exibir perfil, solicitações, reservas e
-                      outras funcionalidades específicas do usuário.
-                    </p>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => router.push("/dashboard")}
-                        className="rounded-2xl border p-4 text-left transition hover:bg-muted/60"
-                      >
-                        <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
-                          <Home className="h-4 w-4" />
-                          Meu painel
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Visualize seu ambiente principal.
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => router.push("/configuracoes")}
-                        className="rounded-2xl border p-4 text-left transition hover:bg-muted/60"
-                      >
-                        <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
-                          <Settings className="h-4 w-4" />
-                          Configurações
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Atualize suas preferências e dados.
-                        </p>
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-3xl shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Seu perfil</CardTitle>
-                    <CardDescription>Informações atuais</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4 rounded-2xl border p-4">
-                      <Avatar className="h-14 w-14">
-                        <AvatarFallback>
-                          {getInitials(usuario.nome)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div>
-                        <p className="font-semibold">{usuario.nome}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Perfil: {usuario.acesso}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border p-4 text-sm text-muted-foreground">
-                      Seu acesso atual é ideal para páginas operacionais e
-                      pessoais. Recursos administrativos permanecem protegidos.
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <>
-                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <Card className="rounded-3xl border-0 shadow-md">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Usuários
-                        </CardTitle>
-                        <CardDescription>cadastrados</CardDescription>
-                      </div>
-                      <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                        <Users className="h-4 w-4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        cardMetricLoading()
-                      ) : (
-                        <>
-                          <div className="text-3xl font-bold tracking-tight">
-                            {metricas.totalUsuarios}
-                          </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Quantidade total no sistema
-                          </p>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-3xl border-0 shadow-md">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Leads
-                        </CardTitle>
-                        <CardDescription>registrados</CardDescription>
-                      </div>
-                      <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                        <FileText className="h-4 w-4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        cardMetricLoading()
-                      ) : (
-                        <>
-                          <div className="text-3xl font-bold tracking-tight">
-                            {metricas.totalLeads}
-                          </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Total no funil de vendas
-                          </p>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-3xl border-0 shadow-md">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Valor total
-                        </CardTitle>
-                        <CardDescription>leads ganhos</CardDescription>
-                      </div>
-                      <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                        <Wallet className="h-4 w-4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        cardMetricLoading()
-                      ) : (
-                        <>
-                          <div className="text-3xl font-bold tracking-tight">
-                            {formatarMoeda(metricas.totalValor)}
-                          </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Soma apenas dos ganhos
-                          </p>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-3xl border-0 shadow-md">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Consultores
-                        </CardTitle>
-                        <CardDescription>ativos no funil</CardDescription>
-                      </div>
-                      <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-                        <Shield className="h-4 w-4" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        cardMetricLoading()
-                      ) : (
-                        <>
-                          <div className="text-3xl font-bold tracking-tight">
-                            {metricas.consultoresUnicos}
-                          </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Com leads vinculados
-                          </p>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                </section>
-
-                <section className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-                  <Card className="rounded-3xl shadow-sm">
+          <section className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+            <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
                         <CardTitle>Kanban do funil</CardTitle>
@@ -864,10 +644,10 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </CardContent>
-                  </Card>
+                </Card>
 
-                  <div className="space-y-6">
-                    <Card className="rounded-3xl shadow-sm">
+                <div className="space-y-6">
+                  <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                       <CardHeader>
                         <CardTitle>Resumo do funil</CardTitle>
                         <CardDescription>Visão rápida</CardDescription>
@@ -931,71 +711,71 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </CardContent>
-                    </Card>
+                  </Card>
 
-                    <Card className="rounded-3xl shadow-sm">
-                      <CardHeader>
-                        <CardTitle>Atalhos rápidos</CardTitle>
-                        <CardDescription>Acesso direto</CardDescription>
-                      </CardHeader>
-                      <CardContent className="grid gap-3">
-                        <button
-                          type="button"
-                          onClick={() => router.push("/usuarios")}
-                          className="flex items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/50"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Users className="h-4 w-4" />
-                            <div>
-                              <p className="font-medium">Usuários</p>
-                              <p className="text-xs text-muted-foreground">
-                                Gerenciar cadastros
-                              </p>
-                            </div>
+                  <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Atalhos rápidos</CardTitle>
+                      <CardDescription>Acesso direto</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-3">
+                      <button
+                        type="button"
+                        onClick={() => router.push("/usuarios")}
+                        className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-left transition hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Usuários</p>
+                            <p className="text-xs text-muted-foreground">
+                              Gerenciar cadastros
+                            </p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() => router.push("/leads")}
-                          className="flex items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/50"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Briefcase className="h-4 w-4" />
-                            <div>
-                              <p className="font-medium">Leads</p>
-                              <p className="text-xs text-muted-foreground">
-                                Explorar o funil
-                              </p>
-                            </div>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/leads")}
+                        className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-left transition hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Briefcase className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Leads</p>
+                            <p className="text-xs text-muted-foreground">
+                              Explorar o funil
+                            </p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() => router.push("/relatorios")}
-                          className="flex items-center justify-between rounded-2xl border p-4 text-left transition hover:bg-muted/50"
-                        >
-                          <div className="flex items-center gap-3">
-                            <BarChart3 className="h-4 w-4" />
-                            <div>
-                              <p className="font-medium">Relatórios</p>
-                              <p className="text-xs text-muted-foreground">
-                                Análises detalhadas
-                              </p>
-                            </div>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/relatorios")}
+                        className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-background/70 p-4 text-left transition hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <BarChart3 className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Relatórios</p>
+                            <p className="text-xs text-muted-foreground">
+                              Análises detalhadas
+                            </p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </section>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </section>
 
-                <section className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-                  <Card className="rounded-3xl shadow-sm">
+              <section className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+                <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
                         <CardTitle>Usuários cadastrados</CardTitle>
@@ -1066,9 +846,9 @@ export default function DashboardPage() {
                         ))
                       )}
                     </CardContent>
-                  </Card>
+                </Card>
 
-                  <Card className="rounded-3xl shadow-sm">
+                <Card className="glass-card rounded-[1.9rem] border-0 shadow-sm">
                     <CardHeader>
                       <CardTitle>Resumo técnico</CardTitle>
                       <CardDescription>Baseado na API atual</CardDescription>
@@ -1103,20 +883,10 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </CardContent>
-                  </Card>
-                </section>
-              </>
-            )}
-          </main>
-
-          <footer className="border-t bg-background/80 px-4 py-4 backdrop-blur lg:px-6">
-            <div className="flex flex-col items-center justify-between gap-2 text-sm text-muted-foreground md:flex-row">
-              <p>© DashKommo. Dashboard do sistema.</p>
-              <p>Developed by soouzaDev</p>
-            </div>
-          </footer>
-        </div>
-      </div>
-    </div>
+                </Card>
+              </section>
+            </>
+          )}
+    </AppShell>
   );
 }
