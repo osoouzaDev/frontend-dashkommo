@@ -47,6 +47,15 @@ export interface UpdateUserPayload {
   senha?: string;
 }
 
+export interface UpdateProfilePayload {
+  nome: string;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  usuario: UsuarioLogin;
+}
+
 export interface RelatorioItem {
   lead_id: number;
   lead_nome: string;
@@ -90,6 +99,15 @@ export async function atualizarUsuario(
   payload: UpdateUserPayload
 ) {
   return await authFetch(`/usuarios/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function atualizarMeuPerfil(
+  payload: UpdateProfilePayload
+): Promise<UpdateProfileResponse> {
+  return await authFetch("/perfil", {
     method: "PUT",
     body: JSON.stringify(payload),
   });

@@ -4,8 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useCompactMode } from "@/components/compact-mode-provider";
-import { clearSession, getAccessToken, getStoredUser } from "@/services/authSession";
+import { getErrorMessage } from "@/lib/error-message";
+import {
+  clearSession,
+  getAccessToken,
+  getStoredUser,
+  updateStoredUser,
+} from "@/services/authSession";
 import { performLogout } from "@/services/logout";
+import { atualizarMeuPerfil } from "@/services/users";
 import {
   BarChart3,
   CheckCircle2,
@@ -108,12 +115,15 @@ export default function ConfiguracoesPage() {
   const pathname = usePathname();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [usuario] = useState<UsuarioLogin | null>(() => getStoredUser());
+  const [usuario, setUsuario] = useState<UsuarioLogin | null>(() => getStoredUser());
 
   const [nome, setNome] = useState(() => getStoredUser()?.nome ?? "");
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [salvandoPerfil, setSalvandoPerfil] = useState(false);
+  const [perfilMensagem, setPerfilMensagem] = useState("");
+  const [perfilErro, setPerfilErro] = useState("");
 
   const [mostrarSenhaAtual, setMostrarSenhaAtual] = useState(false);
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
@@ -131,11 +141,33 @@ export default function ConfiguracoesPage() {
     }
   }, [router, usuario]);
 
-  function handleSalvarPerfil(e: React.FormEvent) {
+  async function handleSalvarPerfil(e: React.FormEvent) {
     e.preventDefault();
-    alert(
-      "Essa tela está inovada no visual e na experiência. Para salvar de verdade, seu backend ainda precisa de uma rota de perfil/configurações."
-    );
+
+    const nomeLimpo = nome.trim();
+
+    if (!nomeLimpo) {
+      setPerfilMensagem("");
+      setPerfilErro("Informe um nome válido.");
+      return;
+    }
+
+    try {
+      setSalvandoPerfil(true);
+      setPerfilMensagem("");
+      setPerfilErro("");
+
+      const resposta = await atualizarMeuPerfil({ nome: nomeLimpo });
+      setNome(resposta.usuario.nome);
+      setUsuario(resposta.usuario);
+      updateStoredUser({ nome: resposta.usuario.nome });
+      setPerfilMensagem(resposta.message || "Perfil atualizado com sucesso.");
+    } catch (error: unknown) {
+      setPerfilMensagem("");
+      setPerfilErro(getErrorMessage(error, "Erro ao atualizar perfil"));
+    } finally {
+      setSalvandoPerfil(false);
+    }
   }
 
   function handleSalvarSenha(e: React.FormEvent) {
@@ -407,6 +439,18 @@ export default function ConfiguracoesPage() {
 
                   <CardContent className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     <form onSubmit={handleSalvarPerfil} className="space-y-4">
+                      {perfilErro ? (
+                        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                          {perfilErro}
+                        </div>
+                      ) : null}
+
+                      {perfilMensagem ? (
+                        <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3 text-sm text-primary">
+                          {perfilMensagem}
+                        </div>
+                      ) : null}
+
                       <div className="space-y-2">
                         <Label htmlFor="nome">Nome</Label>
                         <div className="relative">
@@ -433,8 +477,12 @@ export default function ConfiguracoesPage() {
                         </div>
                       </div>
 
-                      <Button type="submit" className="rounded-xl">
-                        Salvar alterações
+                      <Button
+                        type="submit"
+                        className="rounded-xl"
+                        disabled={salvandoPerfil}
+                      >
+                        {salvandoPerfil ? "Salvando..." : "Salvar alterações"}
                       </Button>
                     </form>
 

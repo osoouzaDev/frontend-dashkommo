@@ -63,6 +63,23 @@ export function updateTokens(token: string, refreshToken?: string) {
   }
 }
 
+export function updateStoredUser(
+  updates: Partial<UserSession> | ((current: UserSession) => UserSession)
+) {
+  if (!canUseStorage()) return null;
+
+  const current = getStoredUser();
+  if (!current) return null;
+
+  const nextUser =
+    typeof updates === "function"
+      ? updates(current)
+      : { ...current, ...updates };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+  return nextUser;
+}
+
 export function clearSession() {
   if (!canUseStorage()) return;
 
