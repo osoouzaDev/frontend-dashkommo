@@ -95,7 +95,7 @@ const STATUS_PERDIDO = 143;
 function obterDataReferencia(item: RelatorioItem) {
   const dataBase =
     Number(item.status_id) === STATUS_GANHO
-      ? item.data_venda || item.data_atualizacao || item.data_criacao
+      ? item.data_venda || item.data_criacao || item.data_atualizacao
       : item.data_criacao;
 
   if (!dataBase) {
