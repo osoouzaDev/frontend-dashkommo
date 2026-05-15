@@ -521,7 +521,7 @@ export default function DashboardPage() {
                           {Array.from({ length: 4 }).map((_, index) => (
                             <div
                               key={index}
-                              className="min-w-[300px] rounded-2xl border p-4"
+                              className="min-w-[300px] rounded-xl border p-5"
                             >
                               <div className="mb-4 h-5 w-40 animate-pulse rounded bg-muted" />
                               <div className="mb-3 h-4 w-24 animate-pulse rounded bg-muted" />
@@ -555,9 +555,9 @@ export default function DashboardPage() {
                             return (
                               <div
                                 key={coluna.etapa}
-                                className="min-w-[320px] max-w-[320px] rounded-3xl border bg-muted/20 p-4"
+                                className="min-w-[320px] max-w-[320px] rounded-[1.1rem] border bg-muted/20 p-5"
                               >
-                                <div className="mb-4 border-b pb-4">
+                                <div className="mb-5 border-b pb-5">
                                   <div className="flex items-start justify-between gap-3">
                                     <div>
                                       <h3 className="text-sm font-bold uppercase tracking-wide">
@@ -574,18 +574,18 @@ export default function DashboardPage() {
                                     </Badge>
                                   </div>
 
-                                  <p className="mt-3 text-sm font-semibold">
+                                  <p className="mt-4 text-sm font-semibold">
                                     {formatarMoeda(coluna.total)}
                                   </p>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   {leadsVisiveis.map((lead) => (
                                     <div
                                       key={lead.lead_id}
-                                      className="rounded-2xl border bg-background p-4 shadow-sm transition hover:border-primary/30"
+                                      className="rounded-xl border bg-background px-5 py-4 shadow-sm transition hover:border-primary/30"
                                     >
-                                      <div className="mb-2 flex items-start justify-between gap-3">
+                                      <div className="mb-3 flex items-start justify-between gap-4">
                                         <div className="min-w-0">
                                           <p className="truncate font-semibold">
                                             {lead.lead_nome}
@@ -602,7 +602,7 @@ export default function DashboardPage() {
                                         </span>
                                       </div>
 
-                                      <div className="space-y-1">
+                                      <div className="space-y-1.5">
                                         <p className="text-xs text-muted-foreground">
                                           Origem:{" "}
                                           {lead.origem || "Não informado"}
@@ -621,7 +621,7 @@ export default function DashboardPage() {
                                   <Button
                                     type="button"
                                     variant="outline"
-                                    className="mt-3 w-full rounded-2xl"
+                                    className="mt-4 w-full rounded-xl"
                                     onClick={() =>
                                       setColunasAbertas((prev) => ({
                                         ...prev,
