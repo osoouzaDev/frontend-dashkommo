@@ -32,8 +32,8 @@ export function StatCard({
   loading = false,
 }: StatCardProps) {
   return (
-    <Card className="glass-card rounded-[1.8rem] border-0 shadow-sm">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+    <Card className="glass-card rounded-[1.15rem] border-0 shadow-sm">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 px-5 pb-3 pt-1">
         <div>
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
@@ -42,14 +42,14 @@ export function StatCard({
         </div>
         <div
           className={cn(
-            "rounded-2xl p-2.5 shadow-sm ring-1 ring-black/5 dark:ring-white/5",
+            "rounded-xl p-2.5 shadow-sm ring-1 ring-black/5 dark:ring-white/5",
             toneClasses[tone]
           )}
         >
           <Icon className="h-4 w-4" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-5 pb-1">
         {loading ? (
           <div className="space-y-3">
             <div className="h-8 w-28 animate-pulse rounded bg-muted" />
